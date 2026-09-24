@@ -188,12 +188,18 @@ export class VehicleStateStore extends EventEmitter {
         break;
       }
       case common.MissionCount.MSG_ID: {
-        this.emit("missionCount", (data as InstanceType<typeof common.MissionCount>).count);
+        this.emit("missionCount", data as InstanceType<typeof common.MissionCount>);
         break;
       }
       case common.MissionItemInt.MSG_ID: {
         const item = data as InstanceType<typeof common.MissionItemInt>;
         this.emit("missionItem", item);
+        break;
+      }
+      case common.MissionRequestInt.MSG_ID:
+      case common.MissionRequest.MSG_ID: {
+        // Vehicle asking for an item during upload; both carry seq + missionType.
+        this.emit("missionRequest", data as InstanceType<typeof common.MissionRequestInt>);
         break;
       }
       case common.MissionAck.MSG_ID: {

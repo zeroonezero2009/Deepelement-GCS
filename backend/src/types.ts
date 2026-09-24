@@ -72,6 +72,20 @@ export interface MissionWaypoint {
   frame: number;
   current: boolean;
   autocontinue: boolean;
+  /** MAV_CMD-specific param1..param4. */
+  params: [number, number, number, number];
+}
+
+/** A mission item as supplied by a client for upload; seq is assigned by position. */
+export interface MissionItemInput {
+  lat: number;
+  lon: number;
+  altM: number;
+  /** MAV_CMD, defaults to NAV_WAYPOINT (16). */
+  command?: number;
+  /** MAV_FRAME, defaults to GLOBAL_RELATIVE_ALT_INT (6). */
+  frame?: number;
+  params?: [number, number, number, number];
 }
 
 export interface ConnectionInfo {
@@ -110,4 +124,27 @@ export interface ConnectOptions {
 export interface ModeOption {
   id: number;
   name: string;
+}
+
+export type AlarmSeverity = "warning" | "critical";
+
+export type AlarmId =
+  | "LINK_LOST"
+  | "BATTERY_LOW"
+  | "BATTERY_CRITICAL"
+  | "GPS_FIX_LOST"
+  | "VEHICLE_FAILSAFE"
+  | "AUTOPILOT_CRITICAL";
+
+export interface AlarmDefinition {
+  id: AlarmId;
+  severity: AlarmSeverity;
+  title: { en: string; ar: string };
+}
+
+export interface ActiveAlarm extends AlarmDefinition {
+  /** Extra context, e.g. the autopilot STATUSTEXT that raised the alarm. */
+  detail: string | null;
+  raisedAt: number;
+  acknowledged: boolean;
 }

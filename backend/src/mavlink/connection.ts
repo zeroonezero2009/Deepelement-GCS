@@ -3,30 +3,31 @@ import { PassThrough } from "stream";
 import {
   MavLinkPacket,
   MavLinkPacketParser,
-  MavLinkPacketRegistry,
   MavLinkPacketSplitter,
   MavLinkProtocolV2,
   MavLinkData,
   minimal,
   common,
-  ardupilotmega,
 } from "node-mavlink";
 import { ConnectOptions } from "../types";
+import { NoLinkError } from "./errors";
+import { REGISTRY } from "./registry";
 import { VehicleStateStore } from "./state";
-
-const REGISTRY: MavLinkPacketRegistry = {
-  ...minimal.REGISTRY,
-  ...common.REGISTRY,
-  ...ardupilotmega.REGISTRY,
-};
 
 // Identity of this GCS on the MAVLink network (same convention as Mission Planner / QGC).
 export const GCS_SYSTEM_ID = 255;
 export const GCS_COMPONENT_ID = 190;
 
 export const DEFAULT_LISTEN_PORT = 14550;
-const HEARTBEAT_STALE_MS = 5000;
+export const DEFAULT_LINK_TIMEOUT_MS = 5000;
 const GCS_HEARTBEAT_INTERVAL_MS = 1000;
+// Telemetry rate requested from ArduPilot, which only streams to a GCS that asks for it.
+const DATA_STREAM_RATE_HZ = 4;
+
+export interface MavlinkConnectionOptions {
+  /** Link is reported lost after this long without an autopilot heartbeat. */
+  linkTimeoutMs?: number;
+}
 
 export class MavlinkConnection {
   private socket: Socket | null = null;
@@ -35,8 +36,11 @@ export class MavlinkConnection {
   private fixedRemote = false;
   private seq = 0;
   private timers: NodeJS.Timeout[] = [];
+  private readonly linkTimeoutMs: number;
 
-  constructor(public readonly store: VehicleStateStore) {}
+  constructor(public readonly store: VehicleStateStore, options: MavlinkConnectionOptions = {}) {
+    this.linkTimeoutMs = options.linkTimeoutMs ?? DEFAULT_LINK_TIMEOUT_MS;
+  }
 
   get isOpen(): boolean {
     return this.socket !== null;
@@ -85,10 +89,12 @@ export class MavlinkConnection {
     });
 
     this.socket = socket;
+    // Reflect the real port when an ephemeral one (0) was requested.
+    this.store.state.connection.listenPort = socket.address().port;
 
     this.timers.push(
       setInterval(() => this.sendGcsHeartbeat(), GCS_HEARTBEAT_INTERVAL_MS),
-      setInterval(() => this.checkStale(), 1000)
+      setInterval(() => this.checkStale(), Math.min(1000, Math.max(50, this.linkTimeoutMs / 4)))
     );
   }
 
@@ -108,7 +114,7 @@ export class MavlinkConnection {
 
   async send(msg: MavLinkData): Promise<void> {
     if (!this.socket || !this.remote) {
-      throw new Error("No vehicle link: waiting for telemetry");
+      throw new NoLinkError();
     }
     const protocol = new MavLinkProtocolV2(GCS_SYSTEM_ID, GCS_COMPONENT_ID);
     const buffer = protocol.serialize(msg, this.seq);
@@ -131,7 +137,30 @@ export class MavlinkConnection {
       return;
     }
     const remote = this.remote ? `${this.remote.address}:${this.remote.port}` : null;
+    const wasConnected = this.store.state.connection.connected;
     this.store.applyMessage(packet.header.msgid, packet.header.sysid, packet.header.compid, data, remote);
+    if (!wasConnected && this.store.state.connection.connected) {
+      this.onVehicleLinked();
+    }
+  }
+
+  /** Called on each transition to connected, including recovery after a lost link. */
+  private onVehicleLinked() {
+    const { sysId, compId } = this.target;
+    const streams = new common.RequestDataStream();
+    streams.targetSystem = sysId;
+    streams.targetComponent = compId;
+    streams.reqStreamId = common.MavDataStream.ALL;
+    streams.reqMessageRate = DATA_STREAM_RATE_HZ;
+    streams.startStop = 1;
+    this.send(streams).catch(() => undefined);
+
+    const home = new common.CommandLong();
+    home.targetSystem = sysId;
+    home.targetComponent = compId;
+    home.command = common.MavCmd.REQUEST_MESSAGE;
+    home._param1 = common.HomePosition.MSG_ID;
+    this.send(home).catch(() => undefined);
   }
 
   private sendGcsHeartbeat() {
@@ -147,7 +176,7 @@ export class MavlinkConnection {
 
   private checkStale() {
     const last = this.store.state.connection.lastHeartbeatAt;
-    if (last && this.store.state.connection.connected && Date.now() - last > HEARTBEAT_STALE_MS) {
+    if (last && this.store.state.connection.connected && Date.now() - last > this.linkTimeoutMs) {
       this.store.markLinkLost();
     }
   }

@@ -9,6 +9,9 @@
   "scripts": {
     "dev": "npm run dev --workspace backend",
     "build": "npm run build --workspace backend",
-    "typecheck": "npm run typecheck --workspace backend"
+    "typecheck": "npm run typecheck --workspace backend",
+    "start": "npm run start --workspace backend",
+    "sim": "npm run sim --workspace backend --",
+    "test": "npm run test --workspace backend"
   }
 }
