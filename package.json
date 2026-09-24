@@ -1,0 +1,14 @@
+{
+  "name": "deepelement-gcs",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DeepElement GCS - a web-based MAVLink Ground Control Station",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace backend",
+    "build": "npm run build --workspace backend",
+    "typecheck": "npm run typecheck --workspace backend"
+  }
+}
