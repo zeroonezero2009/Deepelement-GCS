@@ -144,7 +144,7 @@ export function createApiRouter({ link, commands, mission, alarms }: ApiDeps): R
     "/alarms/:id/ack",
     route((req, res) => {
       const id = req.params.id as AlarmId;
-      if (!(id in ALARM_CATALOG)) throw new InvalidRequestError(`Unknown alarm ${id}`);
+      if (!Object.hasOwn(ALARM_CATALOG, id)) throw new InvalidRequestError(`Unknown alarm ${id}`);
       if (!alarms.acknowledge(id)) res.status(404).json({ error: `Alarm ${id} is not active or already acknowledged` });
     })
   );

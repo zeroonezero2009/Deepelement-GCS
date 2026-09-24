@@ -1,0 +1,30 @@
+{
+  "files": {
+    "14": { "src": ["14.wav", "14.mp3", "14.ogg"], "kind": "tone", "description": "Alert tone (stereo, 48 kHz) - assumed warning tone" },
+    "15": { "src": ["15.wav", "15.mp3", "15.ogg"], "kind": "tone", "description": "Alert tone (stereo, 48 kHz) - assumed critical tone" },
+    "16": { "src": ["16.wav", "16.mp3", "16.ogg"], "kind": "speech", "description": "Speech clip (mono, 16 kHz) - content to be confirmed" },
+    "17": { "src": ["17.wav", "17.mp3", "17.ogg"], "kind": "speech", "description": "Speech clip (mono, 16 kHz) - content to be confirmed" },
+    "18": { "src": ["18.wav", "18.mp3", "18.ogg"], "kind": "speech", "description": "Speech clip (mono, 16 kHz) - content to be confirmed" }
+  },
+  "tones": {
+    "warning": "14",
+    "critical": "15"
+  },
+  "speech": {
+    "LINK_LOST": null,
+    "BATTERY_LOW": null,
+    "BATTERY_CRITICAL": null,
+    "GPS_FIX_LOST": null,
+    "VEHICLE_FAILSAFE": null,
+    "AUTOPILOT_CRITICAL": null
+  },
+  "repeat": {
+    "criticalSec": 10,
+    "warningSec": 30,
+    "speechOnRepeat": true
+  },
+  "tts": {
+    "enabled": true,
+    "lang": "ar"
+  }
+}

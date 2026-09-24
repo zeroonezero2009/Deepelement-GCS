@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeepElement GCS</title>
+  <link rel="stylesheet" href="css/app.css" />
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>DeepElement GCS</h1>
+    <span id="link-pill" class="pill pill-off">No link</span>
+    <span id="mode-pill" class="pill">—</span>
+    <span id="armed-pill" class="pill">DISARMED</span>
+    <div class="spacer"></div>
+    <button id="audio-enable" class="btn btn-accent">Enable audio</button>
+    <button id="audio-mute" class="btn" hidden>Mute</button>
+  </header>
+
+  <section id="alarm-bar" class="alarm-bar" hidden>
+    <ul id="alarm-list"></ul>
+    <button id="alarm-ack-all" class="btn">Acknowledge all</button>
+  </section>
+
+  <main class="grid">
+    <section class="card">
+      <h2>Flight</h2>
+      <dl class="telemetry">
+        <div><dt>Altitude (rel)</dt><dd id="t-alt">—</dd></div>
+        <div><dt>Ground speed</dt><dd id="t-gs">—</dd></div>
+        <div><dt>Climb</dt><dd id="t-climb">—</dd></div>
+        <div><dt>Heading</dt><dd id="t-hdg">—</dd></div>
+        <div><dt>Roll / Pitch</dt><dd id="t-att">—</dd></div>
+        <div><dt>Throttle</dt><dd id="t-thr">—</dd></div>
+        <div><dt>Battery</dt><dd id="t-bat">—</dd></div>
+        <div><dt>GPS</dt><dd id="t-gps">—</dd></div>
+        <div><dt>Position</dt><dd id="t-pos">—</dd></div>
+        <div><dt>Home</dt><dd id="t-home">—</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>Controls</h2>
+      <div class="row">
+        <select id="mode-select" aria-label="Flight mode"></select>
+        <button id="btn-mode" class="btn">Set mode</button>
+      </div>
+      <div class="row">
+        <button id="btn-arm" class="btn btn-warn">Arm</button>
+        <button id="btn-disarm" class="btn btn-warn">Disarm</button>
+      </div>
+      <div class="row">
+        <label class="inline">Takeoff alt (m)
+          <input id="takeoff-alt" type="number" min="1" max="1000" step="1" value="10" />
+        </label>
+        <button id="btn-takeoff" class="btn">Takeoff</button>
+      </div>
+      <div class="row">
+        <button id="btn-land" class="btn">Land</button>
+        <button id="btn-rtl" class="btn">Return to launch</button>
+      </div>
+      <p id="cmd-result" class="result" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Mission</h2>
+      <div class="row">
+        <button id="btn-mission-download" class="btn">Download</button>
+        <button id="btn-mission-clear" class="btn btn-warn">Clear</button>
+      </div>
+      <table class="mission">
+        <thead><tr><th>#</th><th>Cmd</th><th>Lat</th><th>Lon</th><th>Alt (m)</th></tr></thead>
+        <tbody id="mission-body"><tr><td colspan="5" class="muted">No mission loaded</td></tr></tbody>
+      </table>
+      <details>
+        <summary>Upload waypoints (JSON)</summary>
+        <textarea id="mission-json" rows="5" spellcheck="false">[
+  { "lat": 24.7140, "lon": 46.6760, "altM": 20 },
+  { "lat": 24.7150, "lon": 46.6770, "altM": 25 }
+]</textarea>
+        <button id="btn-mission-upload" class="btn">Upload</button>
+      </details>
+      <p id="mission-result" class="result" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>Messages</h2>
+      <ol id="status-log" class="status-log"></ol>
+    </section>
+
+    <section class="card">
+      <h2>Connection</h2>
+      <form id="conn-form" class="stack">
+        <label>Listen UDP port <input id="conn-port" type="number" min="0" max="65535" value="14550" /></label>
+        <label>Remote host (optional) <input id="conn-host" type="text" placeholder="e.g. 192.168.4.1" /></label>
+        <label>Remote port (optional) <input id="conn-rport" type="number" min="1" max="65535" /></label>
+        <div class="row">
+          <button type="submit" class="btn">Connect</button>
+          <button type="button" id="btn-disconnect" class="btn">Disconnect</button>
+        </div>
+      </form>
+      <p id="conn-info" class="muted"></p>
+    </section>
+
+    <section class="card">
+      <h2>Audio</h2>
+      <p id="audio-state" class="muted">Audio is off. Press "Enable audio" to hear alarms.</p>
+      <table class="sounds">
+        <thead><tr><th>#</th><th>Role</th><th>File</th><th></th></tr></thead>
+        <tbody id="sound-body"></tbody>
+      </table>
+      <div class="row">
+        <button id="btn-test-warning" class="btn">Test warning</button>
+        <button id="btn-test-critical" class="btn">Test critical</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
